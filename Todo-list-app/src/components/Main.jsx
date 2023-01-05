@@ -1,44 +1,33 @@
 import React from 'react';
 import { useState } from 'react';
-import { useRef } from 'react';
 import {v4 as uuidv4} from 'uuid';
 import {HiOutlineCalculator} from 'react-icons/hi'
-import {GrAddCircle} from 'react-icons/gr';
+
 import {AiFillDelete} from 'react-icons/ai'
 import {FiEdit} from 'react-icons/fi';
 import {BsCheckLg} from 'react-icons/bs';
+import AddTodo from "./AddTodo"
 
 const Main = () => {
-  const ref = useRef();
-  const [userInput, setUserInput] = useState('');
-  const [edit, setEdit] = useState('');
+  const [selectedId, setSelectedId] = useState(null)
+  const [edit, setEdit] = useState("")
   const [data, setData] = useState([]);
-  //! la fonction qui recupère de la valeur saisie par le user 
-  const handleChange=(e)=> {
-    setUserInput(e.target.value);
-    // console.log(userInput);
-  }
+
 
   //! la fonction qui permet de soummetre ce qu'on a saisie
-  const handleSubmit =(e)=> {
-    e.preventDefault();
-    if(userInput !== ''){
-        const copy = [...data];
-        const id = uuidv4();
-        const name = userInput;
-        copy.push({name, id});
-        setData(copy);
-        e.target.reset();
-        setUserInput('');
+  const handleSubmit =(value)=> {
+    if(value !== ''){
+      setData(data => [...data, {
+        id: uuidv4(),
+        name: value
+      }])
     }
-    // console.log(userInput);
   }
 
 //! la fonction supprime
 
 const handleDelete =({id})=> {
     const copy=[...data].filter((elm) => {
-        // console.log(id, elm.id);
         return elm.id !== id;
 
     });
@@ -47,10 +36,26 @@ const handleDelete =({id})=> {
 
 //! les fonction pour gérer l'edit: je me suis bloque sur ces fonction...
 const onEdit=(e)=>{
+  const {value} = e.target;
+  setEdit(value)
 }
-const handleEdit =({id})=> {
-  
+
+const handleEdit =(id)=> {
+  setSelectedId(id)
 }
+
+const onConfirm = () => {
+  const findItemIndex = (item => item.id === selectedId)
+  const itemIndex = data.findIndex(findItemIndex)
+  const copyDataLeft = data.splice(0, itemIndex)
+  const copyDataRight = data.splice(itemIndex+1)
+  const newData = [...copyDataLeft,{id: selectedId, name: edit} ,...copyDataRight]
+  setData([...newData])
+  setSelectedId(null)
+
+}
+
+
 
   return (
     <section className='mt-10 mx-4 p-4 '>
@@ -60,21 +65,7 @@ const handleEdit =({id})=> {
              </h1>
         </div>
 
-        {/* le Champ de saisie */}
-        <div className=' py-4 '>
-            <h1 className='text-center font-bold text-xl font-poppins'>Ajouter une tache</h1>
-            <div className=' p-4 flex justify-center items-center gap-5'>
-              <form action="" className='flex justify-center items-center gap-5'
-               onSubmit={handleSubmit}>
-                <input type="text" className='border-2 border-gray-500 outline-none '
-                    onChange={handleChange}
-                />
-                <button type='submit' > 
-                    <GrAddCircle size={30} className='cursor-pointer hover:scale-90 ' />
-                </button>
-              </form>
-            </div>
-        </div>
+        <AddTodo handleSubmit={handleSubmit}/>
 
         {/* Dispay userInput */}
         <div className=' p-4 flex justify-center'>
@@ -82,7 +73,7 @@ const handleEdit =({id})=> {
             {
                 data.map(({id, name}) =>(
                     <li key={id} className='flex items-center gap-6 mt-2 '>
-                        <input type="text" ref={ref} defaultValue={name} key={id} readOnly={true}
+                        <input type="text" defaultValue={name} key={id} readOnly={!(selectedId===id)}
                          onChange={onEdit} 
                          className='border-2 border-gray-800 bg-[#bbb] outline-none 
                          text-center'
@@ -93,10 +84,10 @@ const handleEdit =({id})=> {
                             />
                           </button>
                           <button  ><FiEdit size={25} className='hover:scale-90' 
-                            onClick={()=> handleEdit({id})} 
+                            onClick={()=> handleEdit(id)} 
                           />
                           </button>
-                          <button >
+                          <button onClick={()=> onConfirm(edit)}>
                             <BsCheckLg size={25} className='hover:scale-90' 
                             />
                           </button>
@@ -110,5 +101,6 @@ const handleEdit =({id})=> {
     </section>
   )
 }
+
 
 export default Main
